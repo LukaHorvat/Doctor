@@ -7,6 +7,20 @@
   (major1) == 4 && (major2) <  7 || \
   (major1) == 4 && (major2) == 7 && (minor) <= 0)
 
+/* package directory-1.2.1.0 */
+#define VERSION_directory "1.2.1.0"
+#define MIN_VERSION_directory(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  2 || \
+  (major1) == 1 && (major2) == 2 && (minor) <= 1)
+
+/* package parsec-3.1.9 */
+#define VERSION_parsec "3.1.9"
+#define MIN_VERSION_parsec(major1,major2,minor) (\
+  (major1) <  3 || \
+  (major1) == 3 && (major2) <  1 || \
+  (major1) == 3 && (major2) == 1 && (minor) <= 9)
+
 /* package template-haskell-2.9.0.0 */
 #define VERSION_template_haskell "2.9.0.0"
 #define MIN_VERSION_template_haskell(major1,major2,minor) (\
