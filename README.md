@@ -17,5 +17,5 @@ How
 The "atoms" which you can reference aren't lines of code, but actual, language aware, units such as functions, classes, values, etc.
 For that purpose we introduce language providers. These are plugins that a file and a string id, interpret that id
 as a class/function/whatever name and return back the part of that file that contains the unit.
-The Doctor keeps track of what the provided returned last time when asked about the same id. If there are differences, the docs
+The Doctor keeps track of what the provider returned last time when asked about the same id. If there are differences, the docs
 become stale.
