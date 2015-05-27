@@ -6,20 +6,20 @@ import Text.Parsec.Token (stringLiteral)
 import Text.Parsec.Language (haskell)
 import Control.Applicative hiding ((<|>), many)
 
-data Doc = Doc [Chunk]
-data Chunk = Untagged String | Tagged String Ref
-data Ref = Ref { refFile   :: String
-               , refLines  :: [Int] }
-data CommitHash = CommitHash String
+data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
+data Chunk = Untagged String | Tagged String Ref deriving (Show, Eq, Ord, Read)
+data Ref = Ref { refFile  :: String
+               , refLines :: [Marker] }  deriving (Show, Eq, Ord, Read)
+data Marker = Marker String deriving (Show, Eq, Ord, Read)
 
-parse :: String -> Doc
-parse path = undefined
+fromString :: String -> Either ParseError Doc
+fromString src = parse doc "" src
 
 stringLit :: Parser String
 stringLit = stringLiteral haskell
 
 charOrEscape :: Parser Char
-charOrEscape = char '\\' *> oneOf "\\}" <|> anyChar
+charOrEscape = char '\\' *> oneOf "\\}{" <|> noneOf "\\}{"
 
 withSpaces :: Parser a -> Parser a
 withSpaces p = p <* many (oneOf " \t")
@@ -31,23 +31,22 @@ number :: Parser Int
 number = withSpaces $ read <$> many1 digit
 
 rawRef :: Parser Ref
-rawRef = between (word "(-") (word "-)") ref'
-    where ref' = Ref <$> stringLit <*> lines'
-          lines' = concat <$> lineRange `sepBy` word ","
-          lineRange = try ((\x y -> [x..y]) <$> (number <* word "-") <*> number)
-                  <|> return <$> number
+rawRef = between (word "(-") (string "-)") ref
+    where ref     = Ref <$> path <*> markers
+          markers = many marker
+          marker  = try $ Marker <$> many1 markerChar <* word ";"
+          markerChar = noneOf "-;" <|> try (char '-' <* notFollowedBy (char ')'))
+          path    = withSpaces $ lookAhead (char '"') *> stringLit <|> many1 (noneOf " ")
 
-{-
-closedRef :: Parser Ref
-closedRef =
-    where closed = between (char '{') (char '}') charOrEscape
+tagged :: Parser Chunk
+tagged = Tagged <$> closed <*> rawRef
+    where closed = between (char '{') (char '}') $ many1 charOrEscape
 
+untagged :: Parser Chunk
+untagged = Untagged <$> many1 charOrEscape
 
-ref :: Parser Chunk
-ref = closedRef <|> lineRef
--}
-{-
-plainText :: Parser String
-plainText = do
-    i <- many $ noneOf "{"
--}
+chunk :: Parser Chunk
+chunk = tagged <|> untagged
+
+doc :: Parser Doc
+doc = Doc <$> many chunk

@@ -14,6 +14,13 @@
   (major1) == 1 && (major2) <  2 || \
   (major1) == 1 && (major2) == 2 && (minor) <= 1)
 
+/* package filepath-1.3.0.2 */
+#define VERSION_filepath "1.3.0.2"
+#define MIN_VERSION_filepath(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  3 || \
+  (major1) == 1 && (major2) == 3 && (minor) <= 0)
+
 /* package parsec-3.1.9 */
 #define VERSION_parsec "3.1.9"
 #define MIN_VERSION_parsec(major1,major2,minor) (\
