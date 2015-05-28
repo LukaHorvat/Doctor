@@ -11,14 +11,13 @@ import Control.Monad
 
 manual :: String
 manual = [str|
-USAGE:
+    USAGE:
 
-doctor <path to git repo/git url> <path to docs>
-    The usual usage. Builds the documentation connecting the references to the specified repository.
+    doctor <path to git repo/git url> <path to docs>
+        The usual usage. Builds the documentation connecting the references to the specified repository.
 
-doctor /help
-    Shows this page
-|]
+    doctor /help
+        Shows this page |]
 
 getAbsDirectoryContents :: FilePath -> IO [FilePath]
 getAbsDirectoryContents dir = relative >>= mapM (Dir.canonicalizePath . (dir </>))

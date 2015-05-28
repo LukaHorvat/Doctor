@@ -27,11 +27,14 @@ executable Doctor
 
   hs-source-dirs:      src
   default-language:    Haskell2010
+  default-extensions:  NoImplicitPrelude
 
 executable Doctor-Haskell
   main-is:             Providers/Haskell/Main.hs
   build-depends:       base   == 4.7.*,
-                       parsec == 3.1.*
+                       parsec == 3.1.*,
+                       template-haskell
 
   hs-source-dirs:      src
   default-language:    Haskell2010
+  default-extensions:  NoImplicitPrelude
