@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Main where
 
+import Common.Prelude
 import System.Environment
 import System.FilePath ((</>))
 import qualified System.Directory as Dir

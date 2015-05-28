@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Common.TH where
 
+import Common.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote
 

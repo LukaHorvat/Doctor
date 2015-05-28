@@ -1,5 +1,6 @@
 module Parsing.Docs where
 
+import Common.Prelude
 import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Token (stringLiteral)
