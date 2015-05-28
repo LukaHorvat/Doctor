@@ -1,0 +1,19 @@
+{
+    "!\"dist/build/Doctor-Haskell/Doctor-Haskell.exe\" \"src/Main.hs\" manual;main;": [
+        {
+            "snippetEnd": 21,
+            "snippetString": "manual :: String\nmanual = [str|\n    USAGE:\n\n    doctor <path to git repo/git url> <path to docs>\n        The usual usage. Builds the documentation connecting the references to the specified repository.\n\n    doctor /help\n        Shows this page |]\n",
+            "snippetFile": "src/Main.hs",
+            "snippetCommit": "",
+            "snippetStart": 13
+        },
+        {
+            "snippetEnd": 42,
+            "snippetString": "main :: IO ()\nmain = do\n    args <- getArgs\n    case args of\n        [\"/help\"]   -> putStrLn manual\n        [prov, docs] -> do\n            files <- getAbsDirectoryContents docs\n            forM_ (filter isPhd files) $ \\f -> do\n                doc <- Docs.fromString <$> readFile f\n                case doc of\n                    Left err -> print err\n                    Right d  -> Comp.compile prov d >>= Comp.phdToFile \"./docs/codebase.json\"\n        _           -> putStrLn \"Expected two command line arguments. Try /help.\"\n",
+            "snippetFile": "src/Main.hs",
+            "snippetCommit": "",
+            "snippetStart": 30
+        }
+    ],
+    "!\"dist/build/Doctor-Haskell/Doctor-Haskell.exe\" \"src/Main.hs\" ": []
+}

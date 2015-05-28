@@ -8,15 +8,18 @@ import Data.Function
 main :: IO ()
 main = do
     args <- getArgs
-    case args of
+    (start, end, str) <- case args of
         [file, identifier] -> do
             src <- readFile file
-            let (start, end, str) = findIdent src identifier
-            print start
-            print end
-            putStrLn str
-        _ -> error "Expected usage: doctor-haskell <file path> <identifier>"
-    return ()
+            return $ findIdent src identifier
+        [file] -> do
+            src <- readFile file
+            let ln =  length (lines src) + 1
+            return $ (1, ln, src)
+        _ -> error "Expected usage: doctor-haskell <file path> [identifier]"
+    print start
+    print end
+    putStrLn str
 
 trim :: (Int, Int, String) -> (Int, Int, String)
 trim (start, end, inp) = (start, end - newLines + 1, reverse . dropWhile cond $ rev)

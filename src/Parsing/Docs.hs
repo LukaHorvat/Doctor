@@ -1,23 +1,29 @@
 module Parsing.Docs where
 
 import Common.Prelude
-import Text.Parsec
+import Text.Parsec hiding ((<|>), many)
 import Text.Parsec.String
 import Text.Parsec.Token (stringLiteral)
 import Text.Parsec.Language (haskell)
-import Control.Applicative hiding ((<|>), many)
 
 data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
 data Chunk = Untagged String | Tagged String Ref deriving (Show, Eq, Ord, Read)
-data Ref = Ref { refFile  :: String
-               , refLines :: [Marker] }  deriving (Show, Eq, Ord, Read)
-data Marker = Marker String deriving (Show, Eq, Ord, Read)
+data Ref = Ref { refProvider :: String
+               , refFile     :: String
+               , refMarkers  :: [String] }  deriving (Show, Eq, Ord, Read)
+
+refToString :: Ref -> [Char]
+refToString Ref { refProvider = prov, refFile = file, refMarkers = markers } =
+    "!" ++ show prov ++ " " ++ show file ++ " " ++ concatMap (++ ";") markers
 
 fromString :: String -> Either ParseError Doc
 fromString src = parse doc "" src
 
 stringLit :: Parser String
 stringLit = stringLiteral haskell
+
+path :: Parser String
+path = withSpaces $ lookAhead (char '"') *> stringLit <|> many1 (noneOf " ")
 
 charOrEscape :: Parser Char
 charOrEscape = char '\\' *> oneOf "\\}{" <|> noneOf "\\}{"
@@ -33,11 +39,11 @@ number = withSpaces $ read <$> many1 digit
 
 rawRef :: Parser Ref
 rawRef = between (word "(-") (string "-)") ref
-    where ref     = Ref <$> path <*> markers
-          markers = many marker
-          marker  = try $ Marker <$> many1 markerChar <* word ";"
+    where ref        = Ref <$> provider <*> path <*> markers
+          markers    = many marker
+          marker     = try $ many1 markerChar <* word ";"
           markerChar = noneOf "-;" <|> try (char '-' <* notFollowedBy (char ')'))
-          path    = withSpaces $ lookAhead (char '"') *> stringLit <|> many1 (noneOf " ")
+          provider   = char '!' *> path <|> return ""
 
 tagged :: Parser Chunk
 tagged = Tagged <$> closed <*> rawRef
