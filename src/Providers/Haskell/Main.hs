@@ -16,7 +16,7 @@ main = do
         [file, identifier] -> do
             src <- readFile file
             return $ findIdent src identifier
-        _ -> error "Expected usage: doctor-haskell <file path> [identifier]"
+        _ -> error "Expected usage: doctor-haskell <file path> <identifier|\"\">"
     print start
     print end
     putStrLn str
