@@ -33,6 +33,7 @@ compile prov (Doc chunks) = do
               | otherwise             = ref
 
 snippets :: Ref -> IO [Snippet]
+snippets (Ref prov file []) = return <$> snippet prov file ""
 snippets (Ref prov file markers) = mapM (snippet prov file) markers
 
 snippet :: String -> String -> String -> IO Snippet

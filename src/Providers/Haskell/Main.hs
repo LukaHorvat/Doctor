@@ -9,13 +9,13 @@ main :: IO ()
 main = do
     args <- getArgs
     (start, end, str) <- case args of
-        [file, identifier] -> do
-            src <- readFile file
-            return $ findIdent src identifier
-        [file] -> do
+        [file, ""] -> do
             src <- readFile file
             let ln =  length (lines src) + 1
             return $ (1, ln, src)
+        [file, identifier] -> do
+            src <- readFile file
+            return $ findIdent src identifier
         _ -> error "Expected usage: doctor-haskell <file path> [identifier]"
     print start
     print end
