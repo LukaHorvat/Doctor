@@ -42,6 +42,13 @@
   (major1) == 1 && (major2) <  3 || \
   (major1) == 1 && (major2) == 3 && (minor) <= 0)
 
+/* package mtl-2.1.3.1 */
+#define VERSION_mtl "2.1.3.1"
+#define MIN_VERSION_mtl(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  1 || \
+  (major1) == 2 && (major2) == 1 && (minor) <= 3)
+
 /* package parsec-3.1.9 */
 #define VERSION_parsec "3.1.9"
 #define MIN_VERSION_parsec(major1,major2,minor) (\

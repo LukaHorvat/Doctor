@@ -1,4 +1,80 @@
-<div class="prose">Execution starts in the Main.hs file.
-The command line arguments provide the location of the git repository (or a git URL) and the location
-of the documentation that needs to be compiled.
-</div>
+<style>@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
+@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro:300,400);
+
+.container {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.segment {
+    width: 1000px;
+}
+
+.prose {
+    width: 490px;
+    float: left;
+    padding: 5px;
+    font-family: "Open Sans";
+    font-weight: 300;
+    font-size: 15;
+}
+
+.code, .code pre {
+    font-family: "Source Code Pro";
+    font-size: 12;
+}
+
+.code {
+    width: 500px;
+    float: left;
+    overflow-x: hidden;
+    font-weight: 300;
+}
+
+.code pre {
+    font-weight: 400;
+}
+
+.code:hover {
+    overflow-x: visible;
+}
+
+.code-ref {
+    background-color: rgba(255, 255, 0, 0.17);
+}
+
+.code-ref:hover {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+</style><div class="container"><div class="prose">Execution starts in the <span class="code-ref-internal" data-ref-target="!\"./dist/build/doctor-haskell/doctor-haskell.exe\" \"src/Main.hs\" ">Main.hs</span> file.
+<span class="code-ref" data-ref-target="!\"./dist/build/doctor-haskell/doctor-haskell.exe\" \"src/Main.hs\" manual;main;">The command line arguments provide the location of the git repository (or a git URL) and the location
+of the documentation that needs to be compiled.</span>
+</div><div class="code"><span>src/Main.hs</span><pre>manual :: String
+manual = [str|
+    USAGE:
+
+    doctor &lt;path to git repo/git url&gt; &lt;path to docs&gt;
+        The usual usage. Builds the documentation connecting the references to the specified repository.
+
+    doctor /help
+        Shows this page |]
+</pre><span>src/Main.hs</span><pre>main :: IO ()
+main = do
+    args &lt;- getArgs
+    case args of
+        ["/help"]   -&gt; putStrLn manual
+        [prov, docs] -&gt; do
+            files &lt;- getAbsDirectoryContents docs
+            forM_ (filter isPhd files) $ \f -&gt; do
+                eith &lt;- Docs.fromString &lt;$&gt; readFile f
+                let phdOut = FP.dropExtension f `FP.addExtension` ".phd"
+                let htmlOut = FP.dropExtension f `FP.addExtension` ".html"
+                case eith of
+                    Left err  -&gt; print err
+                    Right doc -&gt; do
+                        (doc', phd) &lt;- Comp.compile prov doc
+                        Comp.phdToFile phdOut phd
+                        writeFile htmlOut $ Html.render doc' phd
+        _           -&gt; putStrLn "Expected two command line arguments. Try /help."
+</pre></div></div>

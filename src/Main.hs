@@ -42,7 +42,7 @@ main = do
                 case eith of
                     Left err  -> print err
                     Right doc -> do
-                        phd <- Comp.compile prov doc
+                        (doc', phd) <- Comp.compile prov doc
                         Comp.phdToFile phdOut phd
-                        writeFile htmlOut $ Html.render doc phd
+                        writeFile htmlOut $ Html.render doc' phd
         _           -> putStrLn "Expected two command line arguments. Try /help."

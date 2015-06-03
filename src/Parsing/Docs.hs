@@ -8,9 +8,10 @@ import Text.Parsec.Language (haskell)
 
 data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
 data Chunk = Untagged String | Tagged String Ref deriving (Show, Eq, Ord, Read)
-data Ref = Ref { refProvider :: String
+data Ref = Ref { refInternal :: Bool
+               , refProvider :: String
                , refFile     :: String
-               , refMarkers  :: [String] }  deriving (Show, Eq, Ord, Read)
+               , refMarkers  :: [String]}  deriving (Show, Eq, Ord, Read)
 
 refToString :: Ref -> [Char]
 refToString Ref { refProvider = prov, refFile = file, refMarkers = markers } =
@@ -39,7 +40,8 @@ number = withSpaces $ read <$> many1 digit
 
 rawRef :: Parser Ref
 rawRef = between (word "(-") (string "-)") ref
-    where ref        = Ref <$> provider <*> path <*> markers
+    where internal   = word "~" *> return True <|> return False
+          ref        = Ref <$> internal <*> provider <*> path <*> markers
           markers    = many marker
           marker     = try $ many1 markerChar <* word ";"
           markerChar = noneOf "-;" <|> try (char '-' <* notFollowedBy (char ')'))

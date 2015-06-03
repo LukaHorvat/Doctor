@@ -1,0 +1,49 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
+@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro:300,400);
+
+.container {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.segment {
+    width: 1000px;
+}
+
+.prose {
+    width: 490px;
+    float: left;
+    padding: 5px;
+    font-family: "Open Sans";
+    font-weight: 300;
+    font-size: 15;
+}
+
+.code, .code pre {
+    font-family: "Source Code Pro";
+    font-size: 12;
+}
+
+.code {
+    width: 500px;
+    float: left;
+    overflow-x: hidden;
+    font-weight: 300;
+}
+
+.code pre {
+    font-weight: 400;
+}
+
+.code:hover {
+    overflow-x: visible;
+}
+
+.code-ref {
+    background-color: rgba(255, 255, 0, 0.17);
+}
+
+.code-ref:hover {
+    background-color: rgba(255, 255, 0, 0.3);
+}
