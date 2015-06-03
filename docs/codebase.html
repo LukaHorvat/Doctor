@@ -1,4 +1,18 @@
-<style>@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
+<script>var bgColor = function (col) { return function (el) {
+    var ids = el.dataset.refId.split(",");
+    ids.forEach(function (id) {
+        var els = document.getElementsByClassName("ref-id-" + id);
+        for (var i = 0; i < els.length; ++i) {
+            var item = els[i];
+            item.style.backgroundColor = col;
+        }
+    });
+}};
+
+var hover = bgColor("rgba(255, 255, 0, 0.3)");
+
+var unhover = bgColor("");
+</script><style>@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
 @import url(http://fonts.googleapis.com/css?family=Source+Code+Pro:300,400);
 
 .container {
@@ -47,10 +61,10 @@
 .code-ref:hover {
     background-color: rgba(255, 255, 0, 0.3);
 }
-</style><div class="container"><div class="prose">Execution starts in the <span class="code-ref-internal" data-ref-target="!\"./dist/build/doctor-haskell/doctor-haskell.exe\" \"src/Main.hs\" ">Main.hs</span> file.
-<span class="code-ref" data-ref-target="!\"./dist/build/doctor-haskell/doctor-haskell.exe\" \"src/Main.hs\" manual;main;">The command line arguments provide the location of the git repository (or a git URL) and the location
+</style><div class="container"><div class="prose">Execution starts in the <span class="code-ref-internal" data-ref-id="" onmouseover="hover(this)" onmouseout="unhover(this)">Main.hs</span> file.
+<span class="code-ref" data-ref-id="0,1" onmouseover="hover(this)" onmouseout="unhover(this)">The command line arguments provide the location of the git repository (or a git URL) and the location
 of the documentation that needs to be compiled.</span>
-</div><div class="code"><span>src/Main.hs</span><pre>manual :: String
+</div><div class="code"><div class="ref-id-0"><span>src/Main.hs</span><pre>manual :: String
 manual = [str|
     USAGE:
 
@@ -59,22 +73,22 @@ manual = [str|
 
     doctor /help
         Shows this page |]
-</pre><span>src/Main.hs</span><pre>main :: IO ()
+</pre></div><div class="ref-id-1"><span>src/Main.hs</span><pre>main :: IO ()
 main = do
     args &lt;- getArgs
     case args of
-        ["/help"]   -&gt; putStrLn manual
+        [&quot;/help&quot;]   -&gt; putStrLn manual
         [prov, docs] -&gt; do
             files &lt;- getAbsDirectoryContents docs
             forM_ (filter isPhd files) $ \f -&gt; do
                 eith &lt;- Docs.fromString &lt;$&gt; readFile f
-                let phdOut = FP.dropExtension f `FP.addExtension` ".phd"
-                let htmlOut = FP.dropExtension f `FP.addExtension` ".html"
+                let phdOut = FP.dropExtension f `FP.addExtension` &quot;.phd&quot;
+                let htmlOut = FP.dropExtension f `FP.addExtension` &quot;.html&quot;
                 case eith of
                     Left err  -&gt; print err
                     Right doc -&gt; do
                         (doc', phd) &lt;- Comp.compile prov doc
                         Comp.phdToFile phdOut phd
                         writeFile htmlOut $ Html.render doc' phd
-        _           -&gt; putStrLn "Expected two command line arguments. Try /help."
-</pre></div></div>
+        _           -&gt; putStrLn &quot;Expected two command line arguments. Try /help.&quot;
+</pre></div></div></div>
