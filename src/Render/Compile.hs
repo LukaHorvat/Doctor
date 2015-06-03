@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, TemplateHaskell #-}
+{-# LANGUAGE TupleSections, TemplateHaskell, RecordWildCards #-}
 -- Compiles documentation files into .phd
 module Render.Compile where
 
@@ -15,14 +15,24 @@ data Phd = Phd (Map String [Snippet]) deriving (Eq, Ord, Show, Read)
 data Snippet = Snippet { snippetString   :: String
                        , snippetStart    :: Int
                        , snippetEnd      :: Int
-                       , snippetFile     :: String
                        , snippetCommit   :: String
-                       , snippetInternal :: Bool } deriving (Eq, Ord, Show, Read)
+                       , snippetInternal :: Bool
+                       , snippetRefId    :: RefId } deriving (Eq, Ord, Show, Read)
+data RefId = RefId { refIdProvider :: String
+                   , refIdFile     :: String
+                   , refIdMarker   :: String } deriving (Read, Show, Eq, Ord)
 
+deriveJSON defaultOptions ''RefId
 deriveJSON defaultOptions ''Phd
 deriveJSON defaultOptions ''Snippet
 
 type DefaultProvider = String
+
+showRefId :: RefId -> String
+showRefId RefId{..} = show $ unwords [refIdProvider, refIdFile, refIdMarker]
+
+getRefIds :: Ref -> [RefId]
+getRefIds Ref{..} = map (RefId refProvider refFile) refMarkers
 
 compile :: DefaultProvider -> Doc -> IO (Doc, Phd)
 compile prov (Doc chunks) = do
@@ -36,15 +46,14 @@ compile prov (Doc chunks) = do
           setProvider x = x
 
 snippets :: Ref -> IO [Snippet]
-snippets (Ref internal prov file []) = return <$> snippet internal prov file ""
-snippets (Ref internal prov file markers) = mapM (snippet internal prov file) markers
+snippets ref = mapM (snippet $ refInternal ref) $ getRefIds ref
 
-snippet :: Bool -> String -> String -> String -> IO Snippet
-snippet internal prov file marker = do
+snippet :: Bool -> RefId -> IO Snippet
+snippet internal rid@RefId{ refIdProvider = prov, refIdFile = file, refIdMarker = marker } = do
     res <- Proc.readProcess prov [file, marker] ""
     case lines res of
         []  -> error $ "Provider " ++ prov ++ " could not find reference " ++ file ++ " " ++ marker
-        start : end : rest -> return $ Snippet (unlines rest) (read start) (read end) file "" internal
+        start : end : rest -> return $ Snippet (unlines rest) (read start) (read end) "" internal rid
         [what] -> error $ "Unrecognized output from provider" ++ what
 
 phdToFile :: FilePath -> Phd -> IO ()
