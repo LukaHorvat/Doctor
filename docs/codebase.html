@@ -1482,11 +1482,6 @@ rawRef = between (word &quot;(-&quot;) (string &quot;-)&quot;) ref
 tagged = Tagged &lt;$&gt; closed &lt;*&gt; rawRef
     where closed = between (char '{') (char '}') $ many1 charOrEscape
 </pre></div><div class="code-snippet ref-id-4"><span class="file-name">src/Parsing/Docs.hs</span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
-data Chunk = Untagged String | Tagged String Ref deriving (Show, Eq, Ord, Read)
-data Ref = Ref { refInternal :: Bool
-               , refProvider :: String
-               , refFile     :: String
-               , refMarkers  :: [String]}  deriving (Show, Eq, Ord, Read)
 </pre></div><div class="code-snippet ref-id-5"><span class="file-name">src/Parsing/Docs.hs</span><pre>doc :: Parser Doc
 doc = Doc &lt;$&gt; many chunk
 </pre></div></div></div></body>

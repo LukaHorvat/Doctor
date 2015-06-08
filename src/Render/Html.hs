@@ -63,8 +63,11 @@ body = tag "body"
 br :: Decorator f => f
 br = tag "br"
 
+meta :: Decorator f => f
+meta = tag "meta"
+
 render :: Doc -> Phd -> Html
-render (Doc chunks) (Phd mp) = script marked ++ script baseJs ++ style baseCss ++ body'
+render (Doc chunks) (Phd mp) = script marked ++ script baseJs ++ style baseCss ++ charset ++ body'
     where inner :: String
           inner = div "prose" (div "prose-text" (concatMap (plainChunk lookupTable) chunks) :: String)
                ++ div "code"  (concat $ flip Read.runReader mp $ mapM (refChunk lookupTable) chunks)
@@ -73,6 +76,7 @@ render (Doc chunks) (Phd mp) = script marked ++ script baseJs ++ style baseCss +
           maybeInsert (m, c) r | Map.member r m = (m, c)
                                | otherwise      = (Map.insert r c m, c + 1)
           body' = body (div "container" inner :: String)
+          charset = meta [("charset", "UTF-8")] ""
 
 dropString :: String -> String -> Maybe String
 dropString str text = if text `startsWith` str then Just $ drop (length str) text else Nothing

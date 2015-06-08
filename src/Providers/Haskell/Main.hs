@@ -36,6 +36,11 @@ findIdent src ident =
           split (x : xs) = let (left, rest) = break (noIndent . snd) xs in (x : left) : split rest
           noIndent ""      = False
           noIndent (x : _) = x `notElem` " \t"
-          firstWord = takeWhile (`notElem` " :=")
+          firstWord str
+            | fw `elem` ["data", "newtype", "type", "class", "instance", "import", "let"] =
+                word . drop (length fw + 1) $ str
+            | otherwise = fw
+            where word = takeWhile (`notElem` " :=")
+                  fw = word str
           makePart ls = let ns = map fst ls in (minimum ns, maximum ns, unlines $ map snd ls)
           mergeParts ps = (fst . head $ ps, snd . last $ ps, concatMap trd ps)
