@@ -36,13 +36,66 @@ var repositionSnippets = function () {
     });
 }
 
-var proseHeight = document.getElementsByClassName("prose")[0];
+var proseHeight = 0;
+
+function getCoords(elem) { // crossbrowser version
+    var box = elem.getBoundingClientRect();
+
+    var body = document.body;
+    var docEl = document.documentElement;
+
+    var scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
+    var scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
+
+    var clientTop = docEl.clientTop || body.clientTop || 0;
+    var clientLeft = docEl.clientLeft || body.clientLeft || 0;
+
+    var top  = box.top +  scrollTop - clientTop;
+    var left = box.left + scrollLeft - clientLeft;
+
+    return { top: Math.round(top), left: Math.round(left) };
+}
+
+var overlayElement = null;
+
+var cleanOverlay = function () {
+    if (overlayElement != null) {
+        document.body.removeChild(overlayElement);
+        overlayElement = null;
+    }
+}
+
+var snipHover = function (snip) {
+    snip.addEventListener("mouseover", function () {
+        cleanOverlay();
+        overlayElement = snip.cloneNode(true);
+        var coords = getCoords(snip);
+        overlayElement.style.position = "absolute";
+        overlayElement.style.top = coords.top + "px";
+        overlayElement.style.left = coords.left + "px";
+        overlayElement.style.opacity = "0";
+        var interval = window.setInterval(function () {
+            if (overlayElement == null) {
+                window.clearInterval(interval);
+                return;
+            }
+            var x = +overlayElement.style.opacity;
+            if (x >= 1) window.clearInterval(interval);
+            else overlayElement.style.opacity = "" + (x + 0.05);
+        }, 16);
+        overlayElement.className += " snippet-overlay";
+        document.body.appendChild(overlayElement);
+        overlayElement.addEventListener("mouseout", cleanOverlay);
+    });
+}
 
 var load = function () {
     var proseText = document.getElementsByClassName("prose-text")[0];
     proseText.innerHTML = marked(proseText.innerHTML);
     proseHeight = document.getElementsByClassName("prose-text")[0].offsetHeight;
     document.getElementsByClassName("prose")[0].addEventListener("scroll", repositionSnippets);
+    [].slice.call(document.getElementsByClassName("code-snippet")).forEach(snipHover);
+
     repositionSnippets();
 }
 

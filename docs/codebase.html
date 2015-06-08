@@ -1308,13 +1308,66 @@ var repositionSnippets = function () {
     });
 }
 
-var proseHeight = document.getElementsByClassName("prose")[0];
+var proseHeight = 0;
+
+function getCoords(elem) { // crossbrowser version
+    var box = elem.getBoundingClientRect();
+
+    var body = document.body;
+    var docEl = document.documentElement;
+
+    var scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
+    var scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
+
+    var clientTop = docEl.clientTop || body.clientTop || 0;
+    var clientLeft = docEl.clientLeft || body.clientLeft || 0;
+
+    var top  = box.top +  scrollTop - clientTop;
+    var left = box.left + scrollLeft - clientLeft;
+
+    return { top: Math.round(top), left: Math.round(left) };
+}
+
+var overlayElement = null;
+
+var cleanOverlay = function () {
+    if (overlayElement != null) {
+        document.body.removeChild(overlayElement);
+        overlayElement = null;
+    }
+}
+
+var snipHover = function (snip) {
+    snip.addEventListener("mouseover", function () {
+        cleanOverlay();
+        overlayElement = snip.cloneNode(true);
+        var coords = getCoords(snip);
+        overlayElement.style.position = "absolute";
+        overlayElement.style.top = coords.top + "px";
+        overlayElement.style.left = coords.left + "px";
+        overlayElement.style.opacity = "0";
+        var interval = window.setInterval(function () {
+            if (overlayElement == null) {
+                window.clearInterval(interval);
+                return;
+            }
+            var x = +overlayElement.style.opacity;
+            if (x >= 1) window.clearInterval(interval);
+            else overlayElement.style.opacity = "" + (x + 0.05);
+        }, 16);
+        overlayElement.className += " snippet-overlay";
+        document.body.appendChild(overlayElement);
+        overlayElement.addEventListener("mouseout", cleanOverlay);
+    });
+}
 
 var load = function () {
     var proseText = document.getElementsByClassName("prose-text")[0];
     proseText.innerHTML = marked(proseText.innerHTML);
     proseHeight = document.getElementsByClassName("prose-text")[0].offsetHeight;
     document.getElementsByClassName("prose")[0].addEventListener("scroll", repositionSnippets);
+    [].slice.call(document.getElementsByClassName("code-snippet")).forEach(snipHover);
+
     repositionSnippets();
 }
 
@@ -1327,6 +1380,7 @@ document.addEventListener("DOMContentLoaded", load);
     margin-left: auto;
     margin-right: auto;
     overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 .segment {
@@ -1336,32 +1390,24 @@ document.addEventListener("DOMContentLoaded", load);
 .prose {
     width: 490px;
     float: left;
-    padding: 5px;
     font-family: "Open Sans";
     font-weight: 300;
     font-size: 15;
     overflow-y: scroll;
     height: 95%;
-}
-
-.code, .code pre {
-    font-family: "Source Code Pro";
-    font-size: 12;
+    margin: 5px;
 }
 
 .code {
     width: 500px;
     float: left;
     overflow-x: hidden;
+}
+
+.file-name {
     font-weight: 300;
-}
-
-.code pre {
-    font-weight: 400;
-}
-
-.code:hover {
-    overflow-x: visible;
+    font-family: "Source Code Pro";
+    font-size: 12;
 }
 
 .code-ref {
@@ -1375,6 +1421,16 @@ document.addEventListener("DOMContentLoaded", load);
 .doc-break {
     margin-top: 100px;
 }
+
+.code-snippet {
+    font-family: "Source Code Pro";
+    font-size: 12;
+    font-weight: 400;
+}
+
+.snippet-overlay {
+    background-color: #FAFAFA;
+}
 </style><body><div class="container"><div class="prose"><div class="prose-text"># Start
 
 Execution starts in the <span class="code-ref-internal" data-ref-id="" onmouseover="hover(this)" onmouseout="unhover(this)">Main.hs</span> file.
@@ -1387,7 +1443,7 @@ The work continues in the <span class="code-ref-internal" data-ref-id="" onmouse
 The module defines parsers for documentation elements. It specifies how the
 <span class="code-ref" data-ref-id="2" onmouseover="hover(this)" onmouseout="unhover(this)">reference syntax</span> looks and how the <span class="code-ref" data-ref-id="3" onmouseover="hover(this)" onmouseout="unhover(this)">tags</span> work.
 The output of the module is the <span class="code-ref" data-ref-id="4,5" onmouseover="hover(this)" onmouseout="unhover(this)">`Doc`</span>
-</div></div><div class="code"><div class="code-snippet ref-id-0"><span>src/Main.hs</span><pre>manual :: String
+</div></div><div class="code"><div class="code-snippet ref-id-0"><span class="file-name">src/Main.hs</span><pre>manual :: String
 manual = [str|
     USAGE:
 
@@ -1396,7 +1452,7 @@ manual = [str|
 
     doctor /help
         Shows this page |]
-</pre></div><div class="code-snippet ref-id-1"><span>src/Main.hs</span><pre>main :: IO ()
+</pre></div><div class="code-snippet ref-id-1"><span class="file-name">src/Main.hs</span><pre>main :: IO ()
 main = do
     args &lt;- getArgs
     case args of
@@ -1414,7 +1470,7 @@ main = do
                         Comp.phdToFile phdOut phd
                         writeFile htmlOut $ Html.render doc' phd
         _           -&gt; putStrLn &quot;Expected two command line arguments. Try /help.&quot;
-</pre></div><div class="code-snippet ref-id-2"><span>src/Parsing/Docs.hs</span><pre>rawRef :: Parser Ref
+</pre></div><div class="code-snippet ref-id-2"><span class="file-name">src/Parsing/Docs.hs</span><pre>rawRef :: Parser Ref
 rawRef = between (word &quot;(-&quot;) (string &quot;-)&quot;) ref
     where internal   = word &quot;~&quot; *&gt; return True &lt;|&gt; return False
           ref        = Ref &lt;$&gt; internal &lt;*&gt; provider &lt;*&gt; path &lt;*&gt; markers
@@ -1422,15 +1478,15 @@ rawRef = between (word &quot;(-&quot;) (string &quot;-)&quot;) ref
           marker     = try $ many1 markerChar &lt;* word &quot;;&quot;
           markerChar = noneOf &quot;-;&quot; &lt;|&gt; try (char '-' &lt;* notFollowedBy (char ')'))
           provider   = char '!' *&gt; path &lt;|&gt; return &quot;&quot;
-</pre></div><div class="code-snippet ref-id-3"><span>src/Parsing/Docs.hs</span><pre>tagged :: Parser Chunk
+</pre></div><div class="code-snippet ref-id-3"><span class="file-name">src/Parsing/Docs.hs</span><pre>tagged :: Parser Chunk
 tagged = Tagged &lt;$&gt; closed &lt;*&gt; rawRef
     where closed = between (char '{') (char '}') $ many1 charOrEscape
-</pre></div><div class="code-snippet ref-id-4"><span>src/Parsing/Docs.hs</span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
+</pre></div><div class="code-snippet ref-id-4"><span class="file-name">src/Parsing/Docs.hs</span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
 data Chunk = Untagged String | Tagged String Ref deriving (Show, Eq, Ord, Read)
 data Ref = Ref { refInternal :: Bool
                , refProvider :: String
                , refFile     :: String
                , refMarkers  :: [String]}  deriving (Show, Eq, Ord, Read)
-</pre></div><div class="code-snippet ref-id-5"><span>src/Parsing/Docs.hs</span><pre>doc :: Parser Doc
+</pre></div><div class="code-snippet ref-id-5"><span class="file-name">src/Parsing/Docs.hs</span><pre>doc :: Parser Doc
 doc = Doc &lt;$&gt; many chunk
 </pre></div></div></div></body>

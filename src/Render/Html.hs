@@ -109,8 +109,8 @@ fileGroups :: [Snippet] -> [[Snippet]]
 fileGroups = groupBy ((==) `on` (Comp.refIdFile . Comp.snippetRefId))
 
 toCodeHtml :: Map RefId Int -> [Snippet] -> String
-toCodeHtml mp snips = concat [wrap snippetRefId $ span (Comp.refIdFile snippetRefId) ++ pre (escape snippetString)
-                          | Snippet{ Comp.snippetInternal = False, ..} <- snips]
+toCodeHtml mp snips = concat [wrap snippetRefId $ span "file-name" (Comp.refIdFile snippetRefId) ++ pre (escape snippetString)
+                             | Snippet{ Comp.snippetInternal = False, ..} <- snips]
     where wrap :: RefId -> String -> String
           wrap rid = div $ "code-snippet " ++ "ref-id-" ++ show (mp Map.! rid)
 

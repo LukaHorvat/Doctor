@@ -6,6 +6,7 @@
     margin-left: auto;
     margin-right: auto;
     overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 .segment {
@@ -15,32 +16,24 @@
 .prose {
     width: 490px;
     float: left;
-    padding: 5px;
     font-family: "Open Sans";
     font-weight: 300;
     font-size: 15;
     overflow-y: scroll;
     height: 95%;
-}
-
-.code, .code pre {
-    font-family: "Source Code Pro";
-    font-size: 12;
+    margin: 5px;
 }
 
 .code {
     width: 500px;
     float: left;
     overflow-x: hidden;
+}
+
+.file-name {
     font-weight: 300;
-}
-
-.code pre {
-    font-weight: 400;
-}
-
-.code:hover {
-    overflow-x: visible;
+    font-family: "Source Code Pro";
+    font-size: 12;
 }
 
 .code-ref {
@@ -53,4 +46,14 @@
 
 .doc-break {
     margin-top: 100px;
+}
+
+.code-snippet {
+    font-family: "Source Code Pro";
+    font-size: 12;
+    font-weight: 400;
+}
+
+.snippet-overlay {
+    background-color: #FAFAFA;
 }
