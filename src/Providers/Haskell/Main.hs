@@ -2,8 +2,6 @@ module Providers.Haskell.Main where
 
 import Common.Prelude
 import System.Environment
-import Data.List
-import Data.Function
 
 main :: IO ()
 main = do
@@ -12,7 +10,7 @@ main = do
         [file, ""] -> do
             src <- readFile file
             let ln =  length (lines src) + 1
-            return $ (1, ln, src)
+            return (1, ln, src)
         [file, identifier] -> do
             src <- readFile file
             return $ findIdent src identifier
@@ -29,7 +27,7 @@ trim (start, end, inp) = (start, end - newLines + 1, reverse . dropWhile cond $ 
 
 findIdent :: String -> String -> (Int, Int, String)
 findIdent src ident =
-    case find ((== ident) . firstWord . trd) merged of
+    case find ((`startsWith` ident) . trd) merged of
         Nothing -> (0, 0, "")
         Just m  -> trim m
     where merged = map mergeParts . groupBy ((==) `on` (firstWord . trd)) $ parts
@@ -40,4 +38,4 @@ findIdent src ident =
           noIndent (x : _) = x `notElem` " \t"
           firstWord = takeWhile (`notElem` " :=")
           makePart ls = let ns = map fst ls in (minimum ns, maximum ns, unlines $ map snd ls)
-          mergeParts ps = (fst . head $ ps, snd . last $ ps, concat . map trd $ ps)
+          mergeParts ps = (fst . head $ ps, snd . last $ ps, concatMap trd ps)

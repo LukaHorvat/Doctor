@@ -4,7 +4,7 @@ module Render.Html where
 
 import Common.Prelude hiding (div, span)
 import Common.TH (embedFile)
-import Parsing.Docs (Doc(..), Chunk(..), Ref(..))
+import Parsing.Docs (Doc(..), Chunk(..))
 import qualified Parsing.Docs as Docs
 import Render.Compile (Phd(..), Snippet(..), RefId(..))
 import qualified Render.Compile as Comp
@@ -19,6 +19,9 @@ baseCss = $(embedFile "./src/Resources/base.css")
 baseJs :: String
 baseJs = $(embedFile "./src/Resources/base.js")
 
+marked :: String
+marked = $(embedFile "./src/Resources/marked.js")
+
 type Attribute = (String, String)
 
 type Html = String
@@ -31,10 +34,10 @@ instance Decorator ([Attribute] -> Html -> Html) where
         where showAtt (attName, value) = " " ++ attName ++ "=\"" ++ escape value ++ "\""
 
 instance Decorator (Html -> Html) where
-    tag name inner = tag name ([] :: [Attribute]) inner
+    tag name = tag name ([] :: [Attribute])
 
 instance Decorator (String -> Html -> Html) where
-    tag name cls inner = tag name [("class", cls)] inner
+    tag name cls = tag name [("class", cls)]
 
 div :: Decorator f => f
 div = tag "div"
@@ -54,18 +57,43 @@ style = tag "style"
 script :: Decorator f => f
 script = tag "script"
 
+body :: Decorator f => f
+body = tag "body"
+
+br :: Decorator f => f
+br = tag "br"
+
 render :: Doc -> Phd -> Html
-render (Doc chunks) (Phd mp) = script baseJs ++ style baseCss ++ div "container" inner
+render (Doc chunks) (Phd mp) = script marked ++ script baseJs ++ style baseCss ++ body'
     where inner :: String
-          inner = div "prose" (concatMap (plainChunk lookupTable) chunks)
+          inner = div "prose" (div "prose-text" (concatMap (plainChunk lookupTable) chunks) :: String)
                ++ div "code"  (concat $ flip Read.runReader mp $ mapM (refChunk lookupTable) chunks)
           refIds = concat [Comp.getRefIds r | Tagged _ r <- chunks]
           lookupTable = fst $ foldl maybeInsert (Map.empty, 0) refIds
           maybeInsert (m, c) r | Map.member r m = (m, c)
                                | otherwise      = (Map.insert r c m, c + 1)
+          body' = body (div "container" inner :: String)
+
+dropString :: String -> String -> Maybe String
+dropString str text = if text `startsWith` str then Just $ drop (length str) text else Nothing
+
+insertBreaks :: String -> String
+insertBreaks ('\\' : c : rest) = '\\' : c : insertBreaks rest
+insertBreaks str | isBreak = p "doc-break" "" ++ insertBreaks afterBreak
+    where isBreak = isJust afterBreakM
+          afterBreak = fromJust afterBreakM
+          afterBreakM = dropString "-)"
+                    =<< return . dropWhile (== ' ')
+                    =<< dropString "break"
+                    =<< return . dropWhile (== ' ')
+                    =<< dropString "(-"
+                    =<< Just str
+
+insertBreaks (c : cs) = c : insertBreaks cs
+insertBreaks "" = ""
 
 plainChunk :: Map RefId Int -> Chunk -> String
-plainChunk _  (Untagged s)   = escape s
+plainChunk _  (Untagged s)   = insertBreaks $ escape s
 plainChunk mp (Tagged s ref) = span attrs $ escape s
     where internal | Docs.refInternal ref = "code-ref-internal"
                    | otherwise            = "code-ref"
@@ -84,7 +112,7 @@ toCodeHtml :: Map RefId Int -> [Snippet] -> String
 toCodeHtml mp snips = concat [wrap snippetRefId $ span (Comp.refIdFile snippetRefId) ++ pre (escape snippetString)
                           | Snippet{ Comp.snippetInternal = False, ..} <- snips]
     where wrap :: RefId -> String -> String
-          wrap rid = div ("ref-id-" ++ show (mp Map.! rid))
+          wrap rid = div $ "code-snippet " ++ "ref-id-" ++ show (mp Map.! rid)
 
 escape :: String -> String
 escape str = replace "<" "&lt;"
