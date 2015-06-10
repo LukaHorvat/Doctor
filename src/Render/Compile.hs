@@ -3,13 +3,15 @@
 module Render.Compile where
 
 import Common.Prelude
-import Parsing.Docs (Ref(..), Doc(..), Chunk(..), refToString)
+import Parsing.Docs (Ref(..), Doc(..), Chunk(..), Command(..), refToString)
 import Data.Map (Map)
 import Data.Aeson.TH
 import qualified Data.Aeson as Json
 import qualified Data.Map as Map
 import qualified System.Process as Proc
 import qualified Data.ByteString.Lazy as BS
+import Control.Monad.State (State)
+import qualified Control.Monad.State as State
 
 data Phd = Phd (Map String [Snippet]) deriving (Eq, Ord, Show, Read)
 data Snippet = Snippet { snippetString   :: String
@@ -26,6 +28,9 @@ deriveJSON defaultOptions ''RefId
 deriveJSON defaultOptions ''Phd
 deriveJSON defaultOptions ''Snippet
 
+data Defaults = Defaults { defaultsProvider :: String
+                         , defaultsFile     :: String } deriving (Ord, Eq, Show, Read)
+
 type DefaultProvider = String
 
 showRefId :: RefId -> String
@@ -37,13 +42,18 @@ getRefIds Ref{..} = map (RefId refProvider refFile) refMarkers
 compile :: DefaultProvider -> Doc -> IO (Doc, Phd)
 compile prov (Doc chunks) = do
     list <- mapM (\ref -> (refToString ref,) <$> snippets ref) refs
-    return (Doc providerChunks, Phd $ Map.fromList list)
-    where providerChunks = map setProvider chunks
-          refs = [ref | Tagged _ ref <- providerChunks]
-          setProvider (Tagged s ref)
-              | refProvider ref == "" = Tagged s $ ref { refProvider = prov }
-              | otherwise             = Tagged s ref
-          setProvider x = x
+    return (Doc taggedChunks, Phd $ Map.fromList list)
+    where tag :: Chunk -> State Defaults (Maybe Chunk)
+          tag (Tagged str ref@Ref{..} ) = State.get >>= \defs -> return . Just . Tagged str $ ref {
+              refProvider = changeIf null (defaultsProvider defs) refProvider,
+              refFile     = changeIf null (defaultsFile     defs) refFile }
+          tag (Command (ChangeFile file)) = State.modify (\def -> def { defaultsFile = file })
+                                         >> return Nothing
+          tag (Command (ChangeProvider p)) = State.modify (\def -> def { defaultsProvider = p })
+                                          >> return Nothing
+          tag x = return . Just $ x
+          taggedChunks = catMaybes $ State.evalState (mapM tag chunks) (Defaults prov "")
+          refs = [ref | Tagged _ ref <- taggedChunks]
 
 snippets :: Ref -> IO [Snippet]
 snippets ref = mapM (snippet $ refInternal ref) $ getRefIds ref

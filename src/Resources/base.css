@@ -1,12 +1,16 @@
 @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
 @import url(http://fonts.googleapis.com/css?family=Source+Code+Pro:300,400);
 
+body {
+    overflow: hidden;
+}
+
 .container {
-    width: 1000px;
+    width: 90%;
     margin-left: auto;
-    margin-right: auto;
     overflow-y: hidden;
     overflow-x: hidden;
+    position: relative;
 }
 
 .segment {
@@ -14,7 +18,7 @@
 }
 
 .prose {
-    width: 490px;
+    width: 95%;
     float: left;
     font-family: "Open Sans";
     font-weight: 300;
@@ -24,10 +28,16 @@
     margin: 5px;
 }
 
+.prose-text {
+    width: 490px;
+}
+
 .code {
     width: 500px;
     float: left;
     overflow-x: hidden;
+    position: absolute;
+    left: 510px;
 }
 
 .file-name {

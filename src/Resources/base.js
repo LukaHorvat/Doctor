@@ -17,7 +17,7 @@ function isElementInViewport (el) {
     var rect = el.getBoundingClientRect();
     var proseRect = document.getElementsByClassName("prose")[0].getBoundingClientRect();
     return (
-        rect.bottom > proseRect.top /*or $(window).height() */
+        rect.top > proseRect.top
     );
 }
 
@@ -25,6 +25,11 @@ var repositionSnippets = function () {
     document.getElementsByClassName("prose-text")[0].style.minHeight =
         ((window.innerHeight || document.documentElement.clientHeight) + proseHeight) + "px";
     var refs = [].slice.call(document.getElementsByClassName("code-ref"));
+    var proseRect = document.getElementsByClassName("prose")[0].getBoundingClientRect();
+    var minTop = refs.map(function (el) { return el.getBoundingClientRect().top - proseRect.top; })
+                     .filter(function (x) { return x > 0; })
+                     .reduce(function (m, x) { return Math.min(m, x) }, 1000000)
+    document.getElementsByClassName("snippet-filler")[0].style.height = minTop + "px";
     refs.forEach(function (x) {
         x.dataset.refId.split(",").forEach(function (id) {
             var snips = [].slice.call(document.getElementsByClassName("ref-id-" + id));

@@ -1289,7 +1289,7 @@ function isElementInViewport (el) {
     var rect = el.getBoundingClientRect();
     var proseRect = document.getElementsByClassName("prose")[0].getBoundingClientRect();
     return (
-        rect.bottom > proseRect.top /*or $(window).height() */
+        rect.top > proseRect.top
     );
 }
 
@@ -1297,6 +1297,11 @@ var repositionSnippets = function () {
     document.getElementsByClassName("prose-text")[0].style.minHeight =
         ((window.innerHeight || document.documentElement.clientHeight) + proseHeight) + "px";
     var refs = [].slice.call(document.getElementsByClassName("code-ref"));
+    var proseRect = document.getElementsByClassName("prose")[0].getBoundingClientRect();
+    var minTop = refs.map(function (el) { return el.getBoundingClientRect().top - proseRect.top; })
+                     .filter(function (x) { return x > 0; })
+                     .reduce(function (m, x) { return Math.min(m, x) }, 1000000)
+    document.getElementsByClassName("snippet-filler")[0].style.height = minTop + "px";
     refs.forEach(function (x) {
         x.dataset.refId.split(",").forEach(function (id) {
             var snips = [].slice.call(document.getElementsByClassName("ref-id-" + id));
@@ -1375,12 +1380,16 @@ document.addEventListener("DOMContentLoaded", load);
 </script><style>@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
 @import url(http://fonts.googleapis.com/css?family=Source+Code+Pro:300,400);
 
+body {
+    overflow: hidden;
+}
+
 .container {
-    width: 1000px;
+    width: 90%;
     margin-left: auto;
-    margin-right: auto;
     overflow-y: hidden;
     overflow-x: hidden;
+    position: relative;
 }
 
 .segment {
@@ -1388,7 +1397,7 @@ document.addEventListener("DOMContentLoaded", load);
 }
 
 .prose {
-    width: 490px;
+    width: 95%;
     float: left;
     font-family: "Open Sans";
     font-weight: 300;
@@ -1398,10 +1407,16 @@ document.addEventListener("DOMContentLoaded", load);
     margin: 5px;
 }
 
+.prose-text {
+    width: 490px;
+}
+
 .code {
     width: 500px;
     float: left;
     overflow-x: hidden;
+    position: absolute;
+    left: 510px;
 }
 
 .file-name {
@@ -1431,7 +1446,7 @@ document.addEventListener("DOMContentLoaded", load);
 .snippet-overlay {
     background-color: #FAFAFA;
 }
-</style><body><div class="container"><div class="prose"><div class="prose-text"># Start
+</style><meta charset="UTF-8"></meta><body><div class="container"><div class="prose"><div class="prose-text"># Start
 
 Execution starts in the <span class="code-ref-internal" data-ref-id="" onmouseover="hover(this)" onmouseout="unhover(this)">Main.hs</span> file.
 <span class="code-ref" data-ref-id="0,1" onmouseover="hover(this)" onmouseout="unhover(this)">The command line arguments provide the location of the git repository (or a git URL) and the location
@@ -1439,11 +1454,12 @@ of the documentation that needs to be compiled.</span>
 <p class="doc-break"></p>
 Parsing
 -------
+
 The work continues in the <span class="code-ref-internal" data-ref-id="" onmouseover="hover(this)" onmouseout="unhover(this)">parser</span>.
 The module defines parsers for documentation elements. It specifies how the
 <span class="code-ref" data-ref-id="2" onmouseover="hover(this)" onmouseout="unhover(this)">reference syntax</span> looks and how the <span class="code-ref" data-ref-id="3" onmouseover="hover(this)" onmouseout="unhover(this)">tags</span> work.
 The output of the module is the <span class="code-ref" data-ref-id="4,5" onmouseover="hover(this)" onmouseout="unhover(this)">`Doc`</span>
-</div></div><div class="code"><div class="code-snippet ref-id-0"><span class="file-name">src/Main.hs</span><pre>manual :: String
+</div></div><div class="code"><div class="snippet-filler"></div><div class="code-snippet ref-id-0"><span class="file-name">src/Main.hs</span><pre>manual :: String
 manual = [str|
     USAGE:
 
@@ -1470,18 +1486,18 @@ main = do
                         Comp.phdToFile phdOut phd
                         writeFile htmlOut $ Html.render doc' phd
         _           -&gt; putStrLn &quot;Expected two command line arguments. Try /help.&quot;
-</pre></div><div class="code-snippet ref-id-2"><span class="file-name">src/Parsing/Docs.hs</span><pre>rawRef :: Parser Ref
+</pre></div><div class="code-snippet ref-id-2"><span class="file-name">src/Parsing/Docs.hs </span><pre>rawRef :: Parser Ref
 rawRef = between (word &quot;(-&quot;) (string &quot;-)&quot;) ref
     where internal   = word &quot;~&quot; *&gt; return True &lt;|&gt; return False
           ref        = Ref &lt;$&gt; internal &lt;*&gt; provider &lt;*&gt; path &lt;*&gt; markers
           markers    = many marker
           marker     = try $ many1 markerChar &lt;* word &quot;;&quot;
           markerChar = noneOf &quot;-;&quot; &lt;|&gt; try (char '-' &lt;* notFollowedBy (char ')'))
-          provider   = char '!' *&gt; path &lt;|&gt; return &quot;&quot;
-</pre></div><div class="code-snippet ref-id-3"><span class="file-name">src/Parsing/Docs.hs</span><pre>tagged :: Parser Chunk
+          provider   = path
+</pre></div><div class="code-snippet ref-id-3"><span class="file-name">src/Parsing/Docs.hs </span><pre>tagged :: Parser Chunk
 tagged = Tagged &lt;$&gt; closed &lt;*&gt; rawRef
     where closed = between (char '{') (char '}') $ many1 charOrEscape
-</pre></div><div class="code-snippet ref-id-4"><span class="file-name">src/Parsing/Docs.hs</span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
-</pre></div><div class="code-snippet ref-id-5"><span class="file-name">src/Parsing/Docs.hs</span><pre>doc :: Parser Doc
+</pre></div><div class="code-snippet ref-id-4"><span class="file-name">src/Parsing/Docs.hs </span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
+</pre></div><div class="code-snippet ref-id-5"><span class="file-name">src/Parsing/Docs.hs </span><pre>doc :: Parser Doc
 doc = Doc &lt;$&gt; many chunk
 </pre></div></div></div></body>

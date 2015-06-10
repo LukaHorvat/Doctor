@@ -4,7 +4,7 @@ module Render.Html where
 
 import Common.Prelude hiding (div, span)
 import Common.TH (embedFile)
-import Parsing.Docs (Doc(..), Chunk(..))
+import Parsing.Docs (Doc(..), Chunk(..), Command(..))
 import qualified Parsing.Docs as Docs
 import Render.Compile (Phd(..), Snippet(..), RefId(..))
 import qualified Render.Compile as Comp
@@ -70,7 +70,8 @@ render :: Doc -> Phd -> Html
 render (Doc chunks) (Phd mp) = script marked ++ script baseJs ++ style baseCss ++ charset ++ body'
     where inner :: String
           inner = div "prose" (div "prose-text" (concatMap (plainChunk lookupTable) chunks) :: String)
-               ++ div "code"  (concat $ flip Read.runReader mp $ mapM (refChunk lookupTable) chunks)
+               ++ div "code"  (div "snippet-filler" ""
+                           ++ concat (flip Read.runReader mp $ mapM (refChunk lookupTable) chunks))
           refIds = concat [Comp.getRefIds r | Tagged _ r <- chunks]
           lookupTable = fst $ foldl maybeInsert (Map.empty, 0) refIds
           maybeInsert (m, c) r | Map.member r m = (m, c)
@@ -78,35 +79,20 @@ render (Doc chunks) (Phd mp) = script marked ++ script baseJs ++ style baseCss +
           body' = body (div "container" inner :: String)
           charset = meta [("charset", "UTF-8")] ""
 
-dropString :: String -> String -> Maybe String
-dropString str text = if text `startsWith` str then Just $ drop (length str) text else Nothing
-
-insertBreaks :: String -> String
-insertBreaks ('\\' : c : rest) = '\\' : c : insertBreaks rest
-insertBreaks str | isBreak = p "doc-break" "" ++ insertBreaks afterBreak
-    where isBreak = isJust afterBreakM
-          afterBreak = fromJust afterBreakM
-          afterBreakM = dropString "-)"
-                    =<< return . dropWhile (== ' ')
-                    =<< dropString "break"
-                    =<< return . dropWhile (== ' ')
-                    =<< dropString "(-"
-                    =<< Just str
-
-insertBreaks (c : cs) = c : insertBreaks cs
-insertBreaks "" = ""
-
 plainChunk :: Map RefId Int -> Chunk -> String
-plainChunk _  (Untagged s)   = insertBreaks $ escape s
-plainChunk mp (Tagged s ref) = span attrs $ escape s
+plainChunk _  (Command Break) = p "doc-break" ""
+plainChunk _  (Untagged s)    = escape s
+plainChunk mp (Tagged s ref)  = span attrs $ escape s
     where internal | Docs.refInternal ref = "code-ref-internal"
                    | otherwise            = "code-ref"
           attrs = [("class", internal), ("data-ref-id", ids)
                   ,("onmouseover", "hover(this)"), ("onmouseout", "unhover(this)")]
           ids = intercalate "," . map (\rid -> show $ mp Map.! rid) . Comp.getRefIds $ ref
+plainChunk _  (Command _) = ""
 
 refChunk :: Map RefId Int -> Chunk -> Reader (Map String [Snippet]) String
 refChunk _  (Untagged _)   = return ""
+refChunk _  (Command _)    = return ""
 refChunk mp (Tagged _ ref) = maybe "" (toCodeHtml mp) <$> Read.asks (Map.lookup $ Docs.refToString ref)
 
 fileGroups :: [Snippet] -> [[Snippet]]

@@ -28,3 +28,7 @@ replace old new = replace'
 
 startsWith :: Eq a => [a] -> [a] -> Bool
 startsWith list prefix = take (length prefix) list == prefix
+
+changeIf :: (a -> Bool) -> a -> a -> a
+changeIf p v x | p x       = v
+               | otherwise = x
