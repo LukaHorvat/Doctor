@@ -1448,18 +1448,18 @@ body {
 }
 </style><meta charset="UTF-8"></meta><body><div class="container"><div class="prose"><div class="prose-text"># Start
 
-Execution starts in the <span class="code-ref-internal" data-ref-id="" onmouseover="hover(this)" onmouseout="unhover(this)">Main.hs</span> file.
-<span class="code-ref" data-ref-id="0,1" onmouseover="hover(this)" onmouseout="unhover(this)">The command line arguments provide the location of the git repository (or a git URL) and the location
+Execution starts in the <span class="code-ref-internal" data-ref-id="0" onmouseover="hover(this)" onmouseout="unhover(this)">Main.hs</span> file.
+<span class="code-ref" data-ref-id="1,2" onmouseover="hover(this)" onmouseout="unhover(this)">The command line arguments provide the location of the git repository (or a git URL) and the location
 of the documentation that needs to be compiled.</span>
 <p class="doc-break"></p>
 Parsing
 -------
 
-The work continues in the <span class="code-ref-internal" data-ref-id="" onmouseover="hover(this)" onmouseout="unhover(this)">parser</span>.
+The work continues in the <span class="code-ref-internal" data-ref-id="3" onmouseover="hover(this)" onmouseout="unhover(this)">parser</span>.
 The module defines parsers for documentation elements. It specifies how the
-<span class="code-ref" data-ref-id="2" onmouseover="hover(this)" onmouseout="unhover(this)">reference syntax</span> looks and how the <span class="code-ref" data-ref-id="3" onmouseover="hover(this)" onmouseout="unhover(this)">tags</span> work.
-The output of the module is the <span class="code-ref" data-ref-id="4,5" onmouseover="hover(this)" onmouseout="unhover(this)">`Doc`</span>
-</div></div><div class="code"><div class="snippet-filler"></div><div class="code-snippet ref-id-0"><span class="file-name">src/Main.hs</span><pre>manual :: String
+<span class="code-ref" data-ref-id="4" onmouseover="hover(this)" onmouseout="unhover(this)">reference syntax</span> looks and how the <span class="code-ref" data-ref-id="5" onmouseover="hover(this)" onmouseout="unhover(this)">tags</span> work.
+The output of the module is the <span class="code-ref" data-ref-id="6,7" onmouseover="hover(this)" onmouseout="unhover(this)">`Doc`</span>
+</div></div><div class="code"><div class="snippet-filler"></div><div class="code-snippet ref-id-1"><span class="file-name">src/Main.hs</span><pre>manual :: String
 manual = [str|
     USAGE:
 
@@ -1468,7 +1468,7 @@ manual = [str|
 
     doctor /help
         Shows this page |]
-</pre></div><div class="code-snippet ref-id-1"><span class="file-name">src/Main.hs</span><pre>main :: IO ()
+</pre></div><div class="code-snippet ref-id-2"><span class="file-name">src/Main.hs</span><pre>main :: IO ()
 main = do
     args &lt;- getArgs
     case args of
@@ -1486,7 +1486,7 @@ main = do
                         Comp.phdToFile phdOut phd
                         writeFile htmlOut $ Html.render doc' phd
         _           -&gt; putStrLn &quot;Expected two command line arguments. Try /help.&quot;
-</pre></div><div class="code-snippet ref-id-2"><span class="file-name">src/Parsing/Docs.hs </span><pre>rawRef :: Parser Ref
+</pre></div><div class="code-snippet ref-id-4"><span class="file-name">src/Parsing/Docs.hs </span><pre>rawRef :: Parser Ref
 rawRef = between (word &quot;(-&quot;) (string &quot;-)&quot;) ref
     where internal   = word &quot;~&quot; *&gt; return True &lt;|&gt; return False
           ref        = Ref &lt;$&gt; internal &lt;*&gt; provider &lt;*&gt; path &lt;*&gt; markers
@@ -1494,10 +1494,10 @@ rawRef = between (word &quot;(-&quot;) (string &quot;-)&quot;) ref
           marker     = try $ many1 markerChar &lt;* word &quot;;&quot;
           markerChar = noneOf &quot;-;&quot; &lt;|&gt; try (char '-' &lt;* notFollowedBy (char ')'))
           provider   = path
-</pre></div><div class="code-snippet ref-id-3"><span class="file-name">src/Parsing/Docs.hs </span><pre>tagged :: Parser Chunk
+</pre></div><div class="code-snippet ref-id-5"><span class="file-name">src/Parsing/Docs.hs </span><pre>tagged :: Parser Chunk
 tagged = Tagged &lt;$&gt; closed &lt;*&gt; rawRef
     where closed = between (char '{') (char '}') $ many1 charOrEscape
-</pre></div><div class="code-snippet ref-id-4"><span class="file-name">src/Parsing/Docs.hs </span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
-</pre></div><div class="code-snippet ref-id-5"><span class="file-name">src/Parsing/Docs.hs </span><pre>doc :: Parser Doc
+</pre></div><div class="code-snippet ref-id-6"><span class="file-name">src/Parsing/Docs.hs </span><pre>data Doc = Doc [Chunk] deriving (Show, Eq, Ord, Read)
+</pre></div><div class="code-snippet ref-id-7"><span class="file-name">src/Parsing/Docs.hs </span><pre>doc :: Parser Doc
 doc = Doc &lt;$&gt; many chunk
 </pre></div></div></div></body>

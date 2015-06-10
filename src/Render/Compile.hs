@@ -37,7 +37,8 @@ showRefId :: RefId -> String
 showRefId RefId{..} = show $ unwords [refIdProvider, refIdFile, refIdMarker]
 
 getRefIds :: Ref -> [RefId]
-getRefIds Ref{..} = map (RefId refProvider refFile) refMarkers
+getRefIds Ref{..} | null refMarkers = [RefId refProvider refFile ""]
+                  | otherwise       = map (RefId refProvider refFile) refMarkers
 
 compile :: DefaultProvider -> Doc -> IO (Doc, Phd)
 compile prov (Doc chunks) = do
